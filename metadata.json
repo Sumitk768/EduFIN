@@ -1,0 +1,6 @@
+{
+  "name": "EduFIN",
+  "description": "AI-powered multilingual financial literacy platform backend",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
