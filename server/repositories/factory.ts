@@ -10,6 +10,8 @@ import { ILearningPathRepository, InMemoryLearningPathRepository } from './learn
 import { PostgresLearningPathRepository } from './postgres-learning-path.repository';
 import { IProgressRepository, InMemoryProgressRepository } from './progress.repository';
 import { PostgresProgressRepository } from './postgres-progress.repository';
+import { IScamAnalysisRepository, InMemoryScamAnalysisRepository } from './scam-analysis.repository';
+import { PostgresScamAnalysisRepository } from './postgres-scam-analysis.repository';
 import { isDatabaseConfigured } from '../db/index';
 
 export type RepositoryMode = 'postgres' | 'in_memory' | 'auto';
@@ -24,6 +26,7 @@ export class RepositoryFactory {
   private gapDetectionRepo?: IGapDetectionRepository;
   private learningPathRepo?: ILearningPathRepository;
   private progressRepo?: IProgressRepository;
+  private scamAnalysisRepo?: IScamAnalysisRepository;
 
   private constructor() {}
 
@@ -103,6 +106,15 @@ export class RepositoryFactory {
     return this.progressRepo;
   }
 
+  public getScamAnalysisRepository(): IScamAnalysisRepository {
+    if (!this.scamAnalysisRepo) {
+      this.scamAnalysisRepo = this.shouldUsePostgres()
+        ? new PostgresScamAnalysisRepository()
+        : new InMemoryScamAnalysisRepository();
+    }
+    return this.scamAnalysisRepo;
+  }
+
   public reset(): void {
     this.userRepo = undefined;
     this.knowledgeRepo = undefined;
@@ -110,6 +122,7 @@ export class RepositoryFactory {
     this.gapDetectionRepo = undefined;
     this.learningPathRepo = undefined;
     this.progressRepo = undefined;
+    this.scamAnalysisRepo = undefined;
   }
 }
 

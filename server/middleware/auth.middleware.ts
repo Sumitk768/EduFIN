@@ -66,6 +66,34 @@ export function authenticateJwt(req: Request, res: Response, next: NextFunction)
 }
 
 /**
+ * Optional authentication middleware: if a Bearer token is provided and valid,
+ * req.user is attached. If no token is provided, execution proceeds without error.
+ */
+export function optionalAuthenticateJwt(req: Request, res: Response, next: NextFunction) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return next();
+  }
+
+  const token = authHeader.substring(7).trim();
+  if (!token) {
+    return next();
+  }
+
+  try {
+    const payload = authService.verifyToken(token);
+    req.user = {
+      id: payload.id,
+      email: payload.email,
+    };
+  } catch {
+    // Silently ignore invalid token in optional mode
+  }
+
+  return next();
+}
+
+/**
  * Authorization middleware that enforces resource ownership.
  * Ensures the authenticated user matches the userId specified in route params or body.
  * Returns 401 if unauthenticated and 403 if attempting to access another user's resources.

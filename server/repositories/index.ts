@@ -10,4 +10,6 @@ export * from './learning-path.repository';
 export * from './postgres-learning-path.repository';
 export * from './progress.repository';
 export * from './postgres-progress.repository';
+export * from './scam-analysis.repository';
+export * from './postgres-scam-analysis.repository';
 export * from './factory';

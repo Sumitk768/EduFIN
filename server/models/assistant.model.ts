@@ -11,7 +11,7 @@ export const AssistantQueryRequestSchema = z.object({
   message: z.string().min(1, 'Message cannot be empty').max(2000),
   language: z.enum(SUPPORTED_LANGUAGES.map((l) => l.code) as [string, ...string[]]).default('en'),
   userLevel: z.enum(['beginner', 'intermediate', 'advanced']).default('beginner'),
-  conversationHistory: z.array(ChatMessageSchema).optional().default([]),
+  conversationHistory: z.array(ChatMessageSchema).max(20, 'Conversation history cannot exceed 20 turns').optional().default([]),
   contextCategory: z.enum(FINANCIAL_CATEGORIES).optional(),
 });
 
