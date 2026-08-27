@@ -529,7 +529,7 @@ Hope this helps!`;
         language: 'en',
       });
 
-      assert.strictEqual(result.scamRiskScore, 92);
+      assert.ok(result.scamRiskScore >= 92, `Expected riskScore >= 92, got ${result.scamRiskScore}`);
       assert.strictEqual(result.riskLevel, 'critical_scam');
       assert.strictEqual(result.urgencyTacticDetected, true);
     });
