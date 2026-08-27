@@ -1,55 +1,42 @@
-import { getGeminiClient } from '../ai/gemini.client';
+import { IAIProvider } from '../ai/ai-provider.interface';
+import { getAIProvider } from '../ai/ai.factory';
 import {
   AI_MODELS,
   SCAM_DETECTOR_SYSTEM_INSTRUCTION,
   SCAM_ANALYSIS_SCHEMA,
 } from '../ai/prompts';
-import { CheckScamRequest, ScamAnalysisResult } from '../models/scam-checker.model';
-import { SIMULATOR_PRESETS } from '../data/initial-simulators';
-import { logger } from '../utils/logger.util';
+import {
+  CheckScamRequest,
+  ScamAnalysisResult,
+  ScamAnalysisResultSchema,
+} from '../models/scam-checker.model';
 
 export class ScamCheckerService {
+  constructor(private aiProvider: IAIProvider = getAIProvider()) {}
+
   async analyzeMessage(request: CheckScamRequest): Promise<ScamAnalysisResult> {
-    const ai = getGeminiClient();
-
-    if (!ai) {
-      return this.heuristicScamAnalysis(request);
-    }
-
-    try {
-      const prompt = `Analyze this message received via channel "${request.channel}":
+    const prompt = `Analyze this message received via channel "${request.channel}":
 Message Content: "${request.messageText}"
 Sender Info: ${request.senderInfo || 'Unknown'}
 User Language: ${request.language}
 
 Evaluate if this message represents a financial scam, phishing attempt, lottery fraud, or social engineering tactic. Respond in JSON.`;
 
-      const response = await ai.models.generateContent({
-        model: AI_MODELS.DEFAULT,
-        contents: prompt,
-        config: {
-          systemInstruction: SCAM_DETECTOR_SYSTEM_INSTRUCTION,
-          responseMimeType: 'application/json',
-          responseSchema: SCAM_ANALYSIS_SCHEMA,
-        },
-      });
+    const result = await this.aiProvider.generateStructured<ScamAnalysisResult>({
+      prompt,
+      schema: ScamAnalysisResultSchema,
+      responseSchema: SCAM_ANALYSIS_SCHEMA as any,
+      systemInstruction: SCAM_DETECTOR_SYSTEM_INSTRUCTION,
+      model: AI_MODELS.DEFAULT,
+      operationName: 'analyzeScamMessage',
+      fallback: () => this.heuristicScamAnalysis(request),
+    });
 
-      const text = response.text;
-      if (!text) {
-        return this.heuristicScamAnalysis(request);
-      }
-
-      const parsed: ScamAnalysisResult = JSON.parse(text);
-      return parsed;
-    } catch (err: any) {
-      logger.error('Gemini Scam Checker error:', err.message);
-      return this.heuristicScamAnalysis(request);
-    }
+    return result.data;
   }
 
   private heuristicScamAnalysis(request: CheckScamRequest): ScamAnalysisResult {
     const text = request.messageText.toLowerCase();
-    const signatures = SIMULATOR_PRESETS.scamPatternSignatures;
 
     const matchedFlags: string[] = [];
     const suspiciousElements: { element: string; reason: string }[] = [];
@@ -116,3 +103,4 @@ Evaluate if this message represents a financial scam, phishing attempt, lottery 
 }
 
 export const scamCheckerService = new ScamCheckerService();
+

@@ -1,4 +1,6 @@
-import { getGeminiClient } from '../ai/gemini.client';
+import { z } from 'zod';
+import { IAIProvider } from '../ai/ai-provider.interface';
+import { getAIProvider } from '../ai/ai.factory';
 import {
   AI_MODELS,
   QUESTION_GENERATION_SYSTEM_INSTRUCTION,
@@ -7,52 +9,37 @@ import {
 import {
   GenerateQuestionsRequest,
   GeneratedQuestion,
+  GeneratedQuestionSchema,
   ValidateGeneratedAnswerRequest,
 } from '../models/question-gen.model';
 import { randomUUID } from 'crypto';
-import { logger } from '../utils/logger.util';
 
 export class QuestionGenService {
+  constructor(private aiProvider: IAIProvider = getAIProvider()) {}
+
   async generateQuestions(request: GenerateQuestionsRequest): Promise<GeneratedQuestion[]> {
-    const ai = getGeminiClient();
-
-    if (!ai) {
-      return this.getFallbackQuestions(request);
-    }
-
-    try {
-      const prompt = `Generate exactly ${request.count} high-quality financial quiz questions in language "${request.language}".
+    const prompt = `Generate exactly ${request.count} high-quality financial quiz questions in language "${request.language}".
 Category: ${request.category}
 Difficulty: ${request.difficulty}
 Scenario Type: ${request.scenarioType}
 ${request.customTopicFocus ? `Topic Focus: ${request.customTopicFocus}` : ''}`;
 
-      const response = await ai.models.generateContent({
-        model: AI_MODELS.DEFAULT,
-        contents: prompt,
-        config: {
-          systemInstruction: QUESTION_GENERATION_SYSTEM_INSTRUCTION,
-          responseMimeType: 'application/json',
-          responseSchema: QUESTION_GENERATION_SCHEMA,
-        },
-      });
+    const result = await this.aiProvider.generateStructured<GeneratedQuestion[]>({
+      prompt,
+      schema: z.array(GeneratedQuestionSchema),
+      responseSchema: QUESTION_GENERATION_SCHEMA as any,
+      systemInstruction: QUESTION_GENERATION_SYSTEM_INSTRUCTION,
+      model: AI_MODELS.DEFAULT,
+      operationName: 'generateQuestions',
+      fallback: () => this.getFallbackQuestions(request),
+    });
 
-      const text = response.text;
-      if (!text) {
-        return this.getFallbackQuestions(request);
-      }
-
-      const parsed: GeneratedQuestion[] = JSON.parse(text);
-      return parsed.map((q) => ({
-        ...q,
-        id: q.id || `gen-q-${randomUUID().substring(0, 8)}`,
-        category: request.category,
-        difficulty: request.difficulty,
-      }));
-    } catch (err: any) {
-      logger.error('Gemini Question Generation error:', err.message);
-      return this.getFallbackQuestions(request);
-    }
+    return result.data.map((q) => ({
+      ...q,
+      id: q.id || `gen-q-${randomUUID().substring(0, 8)}`,
+      category: request.category,
+      difficulty: request.difficulty,
+    }));
   }
 
   async validateAnswer(request: ValidateGeneratedAnswerRequest) {
@@ -89,3 +76,4 @@ ${request.customTopicFocus ? `Topic Focus: ${request.customTopicFocus}` : ''}`;
 }
 
 export const questionGenService = new QuestionGenService();
+

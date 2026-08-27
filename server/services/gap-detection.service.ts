@@ -9,7 +9,8 @@ import {
   KnowledgeGapItem,
   GapSeverity,
 } from '../models/gap-detection.model';
-import { getGeminiClient } from '../ai/gemini.client';
+import { IAIProvider } from '../ai/ai-provider.interface';
+import { getAIProvider } from '../ai/ai.factory';
 import { AI_MODELS } from '../ai/prompts';
 import { logger } from '../utils/logger.util';
 import { randomUUID } from 'crypto';
@@ -18,7 +19,8 @@ export class GapDetectionService {
   constructor(
     private assessmentRepo: IAssessmentRepository = repositoryFactory.getAssessmentRepository(),
     private gapRepo: IGapDetectionRepository = repositoryFactory.getGapDetectionRepository(),
-    private knowledgeRepo: IKnowledgeRepository = repositoryFactory.getKnowledgeRepository()
+    private knowledgeRepo: IKnowledgeRepository = repositoryFactory.getKnowledgeRepository(),
+    private aiProvider: IAIProvider = getAIProvider()
   ) {}
 
   async evaluateUserGaps(userId: string): Promise<UserKnowledgeProfile> {
@@ -76,21 +78,22 @@ export class GapDetectionService {
 
     let aiInsights = 'Focus on building consistent savings habits and completing foundational budgeting lessons.';
 
-    // Enhance with Gemini AI analysis if available
-    const ai = getGeminiClient();
-    if (ai && gaps.length > 0) {
+    // Enhance with AI analysis if available
+    if (gaps.length > 0) {
       try {
         const prompt = `Analyze these financial knowledge gaps for a learner and provide a short, encouraging 2-sentence synthesis with priority actions:
 Gaps: ${JSON.stringify(gaps)}
 Mastered Topics: ${JSON.stringify(masteredTopics)}`;
 
-        const response = await ai.models.generateContent({
+        const result = await this.aiProvider.generateText({
+          prompt,
           model: AI_MODELS.FAST,
-          contents: prompt,
+          operationName: 'generateGapInsights',
+          fallback: () => aiInsights,
         });
 
-        if (response.text) {
-          aiInsights = response.text.trim();
+        if (result.text) {
+          aiInsights = result.text.trim();
         }
       } catch (err: any) {
         logger.warn('AI Gap insights generation failed, using fallback:', err.message);
@@ -120,3 +123,4 @@ Mastered Topics: ${JSON.stringify(masteredTopics)}`;
 }
 
 export const gapDetectionService = new GapDetectionService();
+

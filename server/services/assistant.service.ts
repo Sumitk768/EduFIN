@@ -1,4 +1,5 @@
-import { getGeminiClient } from '../ai/gemini.client';
+import { IAIProvider } from '../ai/ai-provider.interface';
+import { getAIProvider } from '../ai/ai.factory';
 import {
   AI_MODELS,
   FINANCIAL_ADVISOR_SYSTEM_INSTRUCTION,
@@ -7,58 +8,45 @@ import {
 import {
   AssistantQueryRequest,
   AssistantResponse,
+  AssistantResponseSchema,
   ExplainTermRequest,
 } from '../models/assistant.model';
-import { knowledgeRepository } from '../repositories/knowledge.repository';
-import { logger } from '../utils/logger.util';
+import { knowledgeRepository, IKnowledgeRepository } from '../repositories/knowledge.repository';
 
 export class AssistantService {
+  constructor(
+    private aiProvider: IAIProvider = getAIProvider(),
+    private knowledgeRepo: IKnowledgeRepository = knowledgeRepository
+  ) {}
+
   async askFinancialTutor(request: AssistantQueryRequest): Promise<AssistantResponse> {
-    const ai = getGeminiClient();
+    const languageInstruction = `Please reply in ${request.language} language. Target literacy level: ${request.userLevel}.`;
+    const contextPrompt = request.contextCategory
+      ? `Focus context category: ${request.contextCategory}`
+      : '';
 
-    if (!ai) {
-      // Fallback deterministic response when Gemini API key is not yet configured
-      return this.buildFallbackResponse(request);
-    }
+    const historyFormatted = (request.conversationHistory || [])
+      .map((m) => `${m.role.toUpperCase()}: ${m.content}`)
+      .join('\n');
 
-    try {
-      const languageInstruction = `Please reply in ${request.language} language. Target literacy level: ${request.userLevel}.`;
-      const contextPrompt = request.contextCategory
-        ? `Focus context category: ${request.contextCategory}`
-        : '';
+    const fullPrompt = `${languageInstruction}\n${contextPrompt}\n\nConversation History:\n${historyFormatted}\n\nUSER QUESTION: ${request.message}`;
 
-      const historyFormatted = request.conversationHistory
-        .map((m) => `${m.role.toUpperCase()}: ${m.content}`)
-        .join('\n');
+    const result = await this.aiProvider.generateStructured<AssistantResponse>({
+      prompt: fullPrompt,
+      schema: AssistantResponseSchema,
+      responseSchema: ASSISTANT_RESPONSE_SCHEMA as any,
+      systemInstruction: FINANCIAL_ADVISOR_SYSTEM_INSTRUCTION,
+      model: AI_MODELS.DEFAULT,
+      operationName: 'askFinancialTutor',
+      fallback: () => this.buildFallbackResponse(request),
+    });
 
-      const fullPrompt = `${languageInstruction}\n${contextPrompt}\n\nConversation History:\n${historyFormatted}\n\nUSER QUESTION: ${request.message}`;
-
-      const response = await ai.models.generateContent({
-        model: AI_MODELS.DEFAULT,
-        contents: fullPrompt,
-        config: {
-          systemInstruction: FINANCIAL_ADVISOR_SYSTEM_INSTRUCTION,
-          responseMimeType: 'application/json',
-          responseSchema: ASSISTANT_RESPONSE_SCHEMA,
-        },
-      });
-
-      const responseText = response.text;
-      if (!responseText) {
-        throw new Error('Empty response received from Gemini model.');
-      }
-
-      const parsed: AssistantResponse = JSON.parse(responseText);
-      return parsed;
-    } catch (err: any) {
-      logger.error('Gemini AI Assistant error:', err.message);
-      return this.buildFallbackResponse(request);
-    }
+    return result.data;
   }
 
   async explainTerm(request: ExplainTermRequest): Promise<AssistantResponse> {
     // Check local knowledge glossary first
-    const terms = await knowledgeRepository.getGlossaryTerms(request.language);
+    const terms = await this.knowledgeRepo.getGlossaryTerms(request.language);
     const matched = terms.find((t) => t.term.toLowerCase().includes(request.term.toLowerCase()));
 
     if (matched) {
@@ -127,3 +115,4 @@ export class AssistantService {
 }
 
 export const assistantService = new AssistantService();
+

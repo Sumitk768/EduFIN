@@ -6,6 +6,9 @@ export interface EnvironmentConfig {
   NODE_ENV: string;
   DATABASE_URL: string | undefined;
   GEMINI_API_KEY: string | undefined;
+  GEMINI_MODEL: string;
+  AI_REQUEST_TIMEOUT_MS: number;
+  AI_MAX_RETRIES: number;
   APP_URL: string;
   API_PREFIX: string;
   APP_VERSION: string;
@@ -19,6 +22,9 @@ export const config: EnvironmentConfig = {
   NODE_ENV: process.env.NODE_ENV || 'development',
   DATABASE_URL: process.env.DATABASE_URL,
   GEMINI_API_KEY: process.env.GEMINI_API_KEY,
+  GEMINI_MODEL: process.env.GEMINI_MODEL || 'gemini-3.7-flash',
+  AI_REQUEST_TIMEOUT_MS: parseInt(process.env.AI_REQUEST_TIMEOUT_MS || '15000', 10),
+  AI_MAX_RETRIES: parseInt(process.env.AI_MAX_RETRIES || '2', 10),
   APP_URL: process.env.APP_URL || 'http://localhost:3000',
   API_PREFIX: '/api/v1',
   APP_VERSION: '1.0.0-backend-alpha',
