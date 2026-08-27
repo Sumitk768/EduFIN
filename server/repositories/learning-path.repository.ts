@@ -6,7 +6,7 @@ export interface ILearningPathRepository {
   updateStepStatus(userId: string, stepId: string, status: 'not_started' | 'in_progress' | 'completed'): Promise<LearningPath | null>;
 }
 
-class InMemoryLearningPathRepository implements ILearningPathRepository {
+export class InMemoryLearningPathRepository implements ILearningPathRepository {
   private paths: Map<string, LearningPath> = new Map();
 
   async saveLearningPath(path: LearningPath): Promise<LearningPath> {
@@ -40,4 +40,5 @@ class InMemoryLearningPathRepository implements ILearningPathRepository {
   }
 }
 
-export const learningPathRepository = new InMemoryLearningPathRepository();
+export const inMemoryLearningPathRepository = new InMemoryLearningPathRepository();
+export const learningPathRepository: ILearningPathRepository = inMemoryLearningPathRepository;

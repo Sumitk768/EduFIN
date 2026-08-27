@@ -5,7 +5,7 @@ export interface IGapDetectionRepository {
   getKnowledgeProfileByUserId(userId: string): Promise<UserKnowledgeProfile | null>;
 }
 
-class InMemoryGapDetectionRepository implements IGapDetectionRepository {
+export class InMemoryGapDetectionRepository implements IGapDetectionRepository {
   private profiles: Map<string, UserKnowledgeProfile> = new Map();
 
   async saveKnowledgeProfile(profile: UserKnowledgeProfile): Promise<UserKnowledgeProfile> {
@@ -18,4 +18,5 @@ class InMemoryGapDetectionRepository implements IGapDetectionRepository {
   }
 }
 
-export const gapDetectionRepository = new InMemoryGapDetectionRepository();
+export const inMemoryGapDetectionRepository = new InMemoryGapDetectionRepository();
+export const gapDetectionRepository: IGapDetectionRepository = inMemoryGapDetectionRepository;

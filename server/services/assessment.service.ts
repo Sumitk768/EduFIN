@@ -1,6 +1,9 @@
-import { assessmentRepository, IAssessmentRepository } from '../repositories/assessment.repository';
-import { userRepository, IUserRepository } from '../repositories/user.repository';
-import { progressRepository, IProgressRepository } from '../repositories/progress.repository';
+import {
+  IAssessmentRepository,
+  IUserRepository,
+  IProgressRepository,
+  repositoryFactory,
+} from '../repositories';
 import {
   AssessmentQuestion,
   AssessmentSubmission,
@@ -13,9 +16,9 @@ import { logger } from '../utils/logger.util';
 
 export class AssessmentService {
   constructor(
-    private assessmentRepo: IAssessmentRepository = assessmentRepository,
-    private userRepo: IUserRepository = userRepository,
-    private progressRepo: IProgressRepository = progressRepository
+    private assessmentRepo: IAssessmentRepository = repositoryFactory.getAssessmentRepository(),
+    private userRepo: IUserRepository = repositoryFactory.getUserRepository(),
+    private progressRepo: IProgressRepository = repositoryFactory.getProgressRepository()
   ) {}
 
   async getQuestions(): Promise<AssessmentQuestion[]> {

@@ -10,7 +10,7 @@ export interface IUserRepository {
   delete(id: string): Promise<boolean>;
 }
 
-class InMemoryUserRepository implements IUserRepository {
+export class InMemoryUserRepository implements IUserRepository {
   private users: Map<string, UserProfile> = new Map();
 
   constructor() {
@@ -87,4 +87,12 @@ class InMemoryUserRepository implements IUserRepository {
   }
 }
 
-export const userRepository = new InMemoryUserRepository();
+export const inMemoryUserRepository = new InMemoryUserRepository();
+export const userRepository: IUserRepository = {
+  findById: (id) => inMemoryUserRepository.findById(id),
+  findByEmail: (email) => inMemoryUserRepository.findByEmail(email),
+  findAll: () => inMemoryUserRepository.findAll(),
+  create: (p) => inMemoryUserRepository.create(p),
+  update: (id, p) => inMemoryUserRepository.update(id, p),
+  delete: (id) => inMemoryUserRepository.delete(id),
+};

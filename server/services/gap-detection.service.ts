@@ -1,6 +1,9 @@
-import { assessmentRepository, IAssessmentRepository } from '../repositories/assessment.repository';
-import { gapDetectionRepository, IGapDetectionRepository } from '../repositories/gap-detection.repository';
-import { knowledgeRepository, IKnowledgeRepository } from '../repositories/knowledge.repository';
+import {
+  IAssessmentRepository,
+  IGapDetectionRepository,
+  IKnowledgeRepository,
+  repositoryFactory,
+} from '../repositories';
 import {
   UserKnowledgeProfile,
   KnowledgeGapItem,
@@ -13,9 +16,9 @@ import { randomUUID } from 'crypto';
 
 export class GapDetectionService {
   constructor(
-    private assessmentRepo: IAssessmentRepository = assessmentRepository,
-    private gapRepo: IGapDetectionRepository = gapDetectionRepository,
-    private knowledgeRepo: IKnowledgeRepository = knowledgeRepository
+    private assessmentRepo: IAssessmentRepository = repositoryFactory.getAssessmentRepository(),
+    private gapRepo: IGapDetectionRepository = repositoryFactory.getGapDetectionRepository(),
+    private knowledgeRepo: IKnowledgeRepository = repositoryFactory.getKnowledgeRepository()
   ) {}
 
   async evaluateUserGaps(userId: string): Promise<UserKnowledgeProfile> {

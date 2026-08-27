@@ -9,7 +9,7 @@ export interface IAssessmentRepository {
   getAllResultsByUserId(userId: string): Promise<AssessmentResult[]>;
 }
 
-class InMemoryAssessmentRepository implements IAssessmentRepository {
+export class InMemoryAssessmentRepository implements IAssessmentRepository {
   private questions: AssessmentQuestion[] = [...INITIAL_ASSESSMENT_QUESTIONS];
   private results: Map<string, AssessmentResult[]> = new Map();
 
@@ -39,4 +39,5 @@ class InMemoryAssessmentRepository implements IAssessmentRepository {
   }
 }
 
-export const assessmentRepository = new InMemoryAssessmentRepository();
+export const inMemoryAssessmentRepository = new InMemoryAssessmentRepository();
+export const assessmentRepository: IAssessmentRepository = inMemoryAssessmentRepository;

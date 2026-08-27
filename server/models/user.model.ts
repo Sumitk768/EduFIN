@@ -40,5 +40,5 @@ export const UpdateUserRequestSchema = z.object({
 });
 
 export type UserProfile = z.infer<typeof UserProfileSchema>;
-export type CreateUserRequest = z.infer<typeof CreateUserRequestSchema>;
-export type UpdateUserRequest = z.infer<typeof UpdateUserRequestSchema>;
+export type CreateUserRequest = z.input<typeof CreateUserRequestSchema>;
+export type UpdateUserRequest = z.input<typeof UpdateUserRequestSchema>;

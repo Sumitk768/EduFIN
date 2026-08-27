@@ -16,7 +16,7 @@ const DEFAULT_BADGES: Badge[] = [
   { id: 'b-streak-7', name: '7-Day Financial Streak', description: 'Maintained continuous daily learning for 7 days', icon: 'zap' },
 ];
 
-class InMemoryProgressRepository implements IProgressRepository {
+export class InMemoryProgressRepository implements IProgressRepository {
   private progressStore: Map<string, UserProgressSummary> = new Map();
 
   private getOrCreate(userId: string): UserProgressSummary {
@@ -112,4 +112,5 @@ class InMemoryProgressRepository implements IProgressRepository {
   }
 }
 
-export const progressRepository = new InMemoryProgressRepository();
+export const inMemoryProgressRepository = new InMemoryProgressRepository();
+export const progressRepository: IProgressRepository = inMemoryProgressRepository;

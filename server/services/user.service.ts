@@ -1,9 +1,9 @@
-import { userRepository, IUserRepository } from '../repositories/user.repository';
+import { IUserRepository, repositoryFactory } from '../repositories';
 import { UserProfile, CreateUserRequest, UpdateUserRequest } from '../models/user.model';
 import { logger } from '../utils/logger.util';
 
 export class UserService {
-  constructor(private repo: IUserRepository = userRepository) {}
+  constructor(private repo: IUserRepository = repositoryFactory.getUserRepository()) {}
 
   async getUser(id: string): Promise<UserProfile | null> {
     return this.repo.findById(id);

@@ -10,7 +10,7 @@ export interface IKnowledgeRepository {
   searchKnowledge(query: string, language?: string): Promise<{ modules: KnowledgeModule[]; glossary: KnowledgeGlossaryTerm[] }>;
 }
 
-class InMemoryKnowledgeRepository implements IKnowledgeRepository {
+export class InMemoryKnowledgeRepository implements IKnowledgeRepository {
   private modules: KnowledgeModule[] = [...INITIAL_KNOWLEDGE_MODULES];
   private glossary: KnowledgeGlossaryTerm[] = [...INITIAL_GLOSSARY_TERMS];
 
@@ -67,4 +67,5 @@ class InMemoryKnowledgeRepository implements IKnowledgeRepository {
   }
 }
 
-export const knowledgeRepository = new InMemoryKnowledgeRepository();
+export const inMemoryKnowledgeRepository = new InMemoryKnowledgeRepository();
+export const knowledgeRepository: IKnowledgeRepository = inMemoryKnowledgeRepository;

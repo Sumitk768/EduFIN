@@ -1,11 +1,11 @@
-import { knowledgeRepository, IKnowledgeRepository } from '../repositories/knowledge.repository';
+import { IKnowledgeRepository, repositoryFactory } from '../repositories';
 import { KnowledgeModule, KnowledgeGlossaryTerm, KnowledgeLesson } from '../models/knowledge.model';
 import { getGeminiClient } from '../ai/gemini.client';
 import { AI_MODELS } from '../ai/prompts';
 import { logger } from '../utils/logger.util';
 
 export class KnowledgeService {
-  constructor(private repo: IKnowledgeRepository = knowledgeRepository) {}
+  constructor(private repo: IKnowledgeRepository = repositoryFactory.getKnowledgeRepository()) {}
 
   async listModules(language?: string): Promise<KnowledgeModule[]> {
     return this.repo.getAllModules(language);

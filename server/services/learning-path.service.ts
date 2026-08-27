@@ -1,7 +1,10 @@
-import { learningPathRepository, ILearningPathRepository } from '../repositories/learning-path.repository';
-import { knowledgeRepository, IKnowledgeRepository } from '../repositories/knowledge.repository';
+import {
+  ILearningPathRepository,
+  IKnowledgeRepository,
+  IUserRepository,
+  repositoryFactory,
+} from '../repositories';
 import { gapDetectionService, GapDetectionService } from './gap-detection.service';
-import { userRepository, IUserRepository } from '../repositories/user.repository';
 import {
   LearningPath,
   LearningStep,
@@ -12,10 +15,10 @@ import { logger } from '../utils/logger.util';
 
 export class LearningPathService {
   constructor(
-    private pathRepo: ILearningPathRepository = learningPathRepository,
-    private knowledgeRepo: IKnowledgeRepository = knowledgeRepository,
+    private pathRepo: ILearningPathRepository = repositoryFactory.getLearningPathRepository(),
+    private knowledgeRepo: IKnowledgeRepository = repositoryFactory.getKnowledgeRepository(),
     private gapService: GapDetectionService = gapDetectionService,
-    private userRepo: IUserRepository = userRepository
+    private userRepo: IUserRepository = repositoryFactory.getUserRepository()
   ) {}
 
   async generateOrGetLearningPath(req: GenerateLearningPathRequest): Promise<LearningPath> {

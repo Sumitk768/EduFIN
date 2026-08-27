@@ -2,10 +2,20 @@ import { Request, Response } from 'express';
 import { sendSuccess } from '../utils/response.util';
 import { config } from '../config/env';
 import { getGeminiClient } from '../ai/gemini.client';
+import { isDatabaseConfigured, checkDatabaseConnection } from '../db/index';
+import { repositoryFactory } from '../repositories/factory';
 
 export class HealthController {
-  getHealth(req: Request, res: Response) {
+  async getHealth(req: Request, res: Response) {
     const aiAvailable = !!getGeminiClient();
+    const dbConfigured = isDatabaseConfigured();
+    const activeRepoMode = repositoryFactory.getMode();
+    const usingPostgres = repositoryFactory.shouldUsePostgres();
+
+    let dbCheck: { connected: boolean; latencyMs?: number; error?: string } = { connected: false };
+    if (dbConfigured) {
+      dbCheck = await checkDatabaseConnection();
+    }
 
     const healthStatus = {
       status: 'healthy',
@@ -15,7 +25,10 @@ export class HealthController {
       port: config.PORT,
       subsystems: {
         apiServer: 'UP',
-        inMemoryDatabase: 'UP',
+        persistenceLayer: usingPostgres ? (dbCheck.connected ? 'POSTGRESQL_ONLINE' : 'POSTGRESQL_DEGRADED') : 'IN_MEMORY_MODE',
+        databaseConfigured: dbConfigured,
+        databaseLatencyMs: dbCheck.latencyMs ?? null,
+        repositoryMode: activeRepoMode,
         geminiAIIntegration: aiAvailable ? 'CONFIGURED' : 'UNCONFIGURED_FALLBACK_MODE',
       },
     };

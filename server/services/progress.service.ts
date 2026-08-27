@@ -1,17 +1,19 @@
-import { progressRepository, IProgressRepository } from '../repositories/progress.repository';
+import { IProgressRepository, IKnowledgeRepository, repositoryFactory } from '../repositories';
 import { RecordLessonCompletion, RecordQuizScore, UserProgressSummary } from '../models/progress.model';
-import { knowledgeRepository } from '../repositories/knowledge.repository';
 import { logger } from '../utils/logger.util';
 
 export class ProgressService {
-  constructor(private repo: IProgressRepository = progressRepository) {}
+  constructor(
+    private repo: IProgressRepository = repositoryFactory.getProgressRepository(),
+    private knowledgeRepo: IKnowledgeRepository = repositoryFactory.getKnowledgeRepository()
+  ) {}
 
   async getUserProgress(userId: string): Promise<UserProgressSummary> {
     return this.repo.getUserProgress(userId);
   }
 
   async recordLessonCompletion(record: RecordLessonCompletion): Promise<UserProgressSummary> {
-    const module = await knowledgeRepository.getModuleById(record.moduleId);
+    const module = await this.knowledgeRepo.getModuleById(record.moduleId);
     const category = module?.category || 'budgeting_basics';
 
     const lesson = module?.lessons.find((l) => l.id === record.lessonId);
@@ -40,3 +42,4 @@ export class ProgressService {
 }
 
 export const progressService = new ProgressService();
+
