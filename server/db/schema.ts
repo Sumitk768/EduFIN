@@ -17,6 +17,7 @@ export const users = pgTable(
     id: text('id').primaryKey(),
     name: text('name').notNull(),
     email: text('email').notNull().unique(),
+    passwordHash: text('password_hash'),
     preferredLanguage: text('preferred_language').notNull().default('en'),
     literacyLevel: text('literacy_level').notNull().default('beginner'),
     monthlyIncomeCurrency: text('monthly_income_currency').notNull().default('USD'),

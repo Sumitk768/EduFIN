@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { learningPathController } from '../controllers/learning-path.controller';
 import { validateBody } from '../middleware/validate.middleware';
 import { GenerateLearningPathRequestSchema } from '../models/learning-path.model';
+import { authenticateJwt, requireOwnership } from '../middleware/auth.middleware';
 import { z } from 'zod';
 
 const UpdateStepStatusSchema = z.object({
@@ -10,14 +11,22 @@ const UpdateStepStatusSchema = z.object({
 
 const router = Router();
 
-router.get('/:userId', (req, res, next) =>
+router.get('/:userId', authenticateJwt, requireOwnership('userId'), (req, res, next) =>
   learningPathController.getLearningPath(req, res, next)
 );
-router.post('/generate', validateBody(GenerateLearningPathRequestSchema), (req, res, next) =>
-  learningPathController.generateLearningPath(req, res, next)
+router.post(
+  '/generate',
+  authenticateJwt,
+  validateBody(GenerateLearningPathRequestSchema),
+  requireOwnership('userId'),
+  (req, res, next) => learningPathController.generateLearningPath(req, res, next)
 );
-router.patch('/:userId/steps/:stepId', validateBody(UpdateStepStatusSchema), (req, res, next) =>
-  learningPathController.updateStepStatus(req, res, next)
+router.patch(
+  '/:userId/steps/:stepId',
+  authenticateJwt,
+  requireOwnership('userId'),
+  validateBody(UpdateStepStatusSchema),
+  (req, res, next) => learningPathController.updateStepStatus(req, res, next)
 );
 
 export default router;

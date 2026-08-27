@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import healthRoutes from './health.routes';
+import authRoutes from './auth.routes';
 import userRoutes from './user.routes';
 import assessmentRoutes from './assessment.routes';
 import knowledgeRoutes from './knowledge.routes';
@@ -19,6 +20,7 @@ router.use('/', healthRoutes);
 // Mount API v1 Core Backend Modules
 const v1Router = Router();
 
+v1Router.use('/auth', authRoutes);
 v1Router.use('/users', userRoutes);
 v1Router.use('/assessment', assessmentRoutes);
 v1Router.use('/knowledge', knowledgeRoutes);

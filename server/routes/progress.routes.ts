@@ -5,17 +5,26 @@ import {
   RecordLessonCompletionSchema,
   RecordQuizScoreSchema,
 } from '../models/progress.model';
+import { authenticateJwt, requireOwnership } from '../middleware/auth.middleware';
 
 const router = Router();
 
-router.get('/:userId', (req, res, next) =>
+router.get('/:userId', authenticateJwt, requireOwnership('userId'), (req, res, next) =>
   progressController.getUserProgress(req, res, next)
 );
-router.post('/lesson-completed', validateBody(RecordLessonCompletionSchema), (req, res, next) =>
-  progressController.recordLessonCompletion(req, res, next)
+router.post(
+  '/lesson-completed',
+  authenticateJwt,
+  validateBody(RecordLessonCompletionSchema),
+  requireOwnership('userId'),
+  (req, res, next) => progressController.recordLessonCompletion(req, res, next)
 );
-router.post('/quiz-score', validateBody(RecordQuizScoreSchema), (req, res, next) =>
-  progressController.recordQuizScore(req, res, next)
+router.post(
+  '/quiz-score',
+  authenticateJwt,
+  validateBody(RecordQuizScoreSchema),
+  requireOwnership('userId'),
+  (req, res, next) => progressController.recordQuizScore(req, res, next)
 );
 
 export default router;

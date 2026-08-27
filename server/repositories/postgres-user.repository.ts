@@ -2,7 +2,13 @@ import { eq, sql } from 'drizzle-orm';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { randomUUID } from 'crypto';
 import { IUserRepository } from './user.repository';
-import { UserProfile, CreateUserRequest, UpdateUserRequest } from '../models/user.model';
+import {
+  UserProfile,
+  CreateUserRequest,
+  UpdateUserRequest,
+  UserAuthRecord,
+  CreateUserInternalRequest,
+} from '../models/user.model';
 import { db as defaultDb } from '../db/index';
 import * as schema from '../db/schema';
 import { logger } from '../utils/logger.util';
@@ -43,6 +49,39 @@ export class PostgresUserRepository implements IUserRepository {
     }
   }
 
+  async findAuthByEmail(email: string): Promise<UserAuthRecord | null> {
+    try {
+      const normalizedEmail = email.trim().toLowerCase();
+      const rows = await this.db
+        .select()
+        .from(schema.users)
+        .where(eq(sql`lower(${schema.users.email})`, normalizedEmail))
+        .limit(1);
+
+      if (rows.length === 0) return null;
+      return this.mapToAuthDomain(rows[0]);
+    } catch (err: any) {
+      logger.error(`PostgresUserRepository.findAuthByEmail error for email ${email}:`, err.message);
+      throw new Error(`Failed to retrieve user auth by email: ${err.message}`, { cause: err });
+    }
+  }
+
+  async findAuthById(id: string): Promise<UserAuthRecord | null> {
+    try {
+      const rows = await this.db
+        .select()
+        .from(schema.users)
+        .where(eq(schema.users.id, id))
+        .limit(1);
+
+      if (rows.length === 0) return null;
+      return this.mapToAuthDomain(rows[0]);
+    } catch (err: any) {
+      logger.error(`PostgresUserRepository.findAuthById error for id ${id}:`, err.message);
+      throw new Error(`Failed to retrieve user auth by ID: ${err.message}`, { cause: err });
+    }
+  }
+
   async findAll(): Promise<UserProfile[]> {
     try {
       const rows = await this.db.select().from(schema.users);
@@ -53,7 +92,7 @@ export class PostgresUserRepository implements IUserRepository {
     }
   }
 
-  async create(payload: CreateUserRequest): Promise<UserProfile> {
+  async create(payload: CreateUserInternalRequest): Promise<UserProfile> {
     try {
       const id = randomUUID();
       const now = new Date();
@@ -63,6 +102,7 @@ export class PostgresUserRepository implements IUserRepository {
           id,
           name: payload.name,
           email: payload.email.trim().toLowerCase(),
+          passwordHash: payload.passwordHash ?? null,
           preferredLanguage: payload.preferredLanguage || 'en',
           literacyLevel: 'beginner',
           monthlyIncomeCurrency: payload.monthlyIncomeCurrency || 'USD',
@@ -137,5 +177,23 @@ export class PostgresUserRepository implements IUserRepository {
       updatedAt: row.updatedAt instanceof Date ? row.updatedAt.toISOString() : new Date(row.updatedAt).toISOString(),
     };
   }
+
+  private mapToAuthDomain(row: typeof schema.users.$inferSelect): UserAuthRecord {
+    return {
+      id: row.id,
+      name: row.name,
+      email: row.email,
+      passwordHash: row.passwordHash ?? null,
+      preferredLanguage: row.preferredLanguage as any,
+      literacyLevel: row.literacyLevel as any,
+      monthlyIncomeCurrency: row.monthlyIncomeCurrency,
+      estimatedMonthlyIncome: row.estimatedMonthlyIncome ?? undefined,
+      primaryFinancialGoal: row.primaryFinancialGoal ?? undefined,
+      completedAssessment: row.completedAssessment,
+      createdAt: row.createdAt instanceof Date ? row.createdAt.toISOString() : new Date(row.createdAt).toISOString(),
+      updatedAt: row.updatedAt instanceof Date ? row.updatedAt.toISOString() : new Date(row.updatedAt).toISOString(),
+    };
+  }
 }
+
 

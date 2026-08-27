@@ -42,3 +42,15 @@ export const UpdateUserRequestSchema = z.object({
 export type UserProfile = z.infer<typeof UserProfileSchema>;
 export type CreateUserRequest = z.input<typeof CreateUserRequestSchema>;
 export type UpdateUserRequest = z.input<typeof UpdateUserRequestSchema>;
+
+/**
+ * Internal entity representation for authentication and password verification.
+ * Note: passwordHash is strictly excluded from the public UserProfile model.
+ */
+export interface UserAuthRecord extends UserProfile {
+  passwordHash?: string | null;
+}
+
+export type CreateUserInternalRequest = CreateUserRequest & {
+  passwordHash?: string | null;
+};

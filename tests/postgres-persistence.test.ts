@@ -67,6 +67,7 @@ describe('EduFIN PostgreSQL & Drizzle ORM Persistence Tests', () => {
         id text PRIMARY KEY,
         name text NOT NULL,
         email text NOT NULL UNIQUE,
+        password_hash text,
         preferred_language text NOT NULL DEFAULT 'en',
         literacy_level text NOT NULL DEFAULT 'beginner',
         monthly_income_currency text NOT NULL DEFAULT 'USD',

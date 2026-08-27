@@ -4,18 +4,21 @@ import * as schema from './schema';
 import { INITIAL_KNOWLEDGE_MODULES, INITIAL_GLOSSARY_TERMS } from '../data/initial-knowledge';
 import { INITIAL_ASSESSMENT_QUESTIONS } from '../data/initial-assessments';
 import { logger } from '../utils/logger.util';
+import bcrypt from 'bcryptjs';
 
 export async function seedDatabase(db: NodePgDatabase<typeof schema> = defaultDb) {
   logger.info('Starting EduFIN database seeding...');
 
   // 1. Seed Demo User
   const demoUserId = '00000000-0000-0000-0000-000000000001';
+  const demoPasswordHash = bcrypt.hashSync('Priya@EduFin2026', 8);
   await db
     .insert(schema.users)
     .values({
       id: demoUserId,
       name: 'Priya Sharma',
       email: 'priya.sharma@example.com',
+      passwordHash: demoPasswordHash,
       preferredLanguage: 'hi',
       literacyLevel: 'beginner',
       monthlyIncomeCurrency: 'INR',
@@ -30,6 +33,7 @@ export async function seedDatabase(db: NodePgDatabase<typeof schema> = defaultDb
       set: {
         name: 'Priya Sharma',
         email: 'priya.sharma@example.com',
+        passwordHash: demoPasswordHash,
         preferredLanguage: 'hi',
         literacyLevel: 'beginner',
         monthlyIncomeCurrency: 'INR',
