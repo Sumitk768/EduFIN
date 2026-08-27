@@ -1,0 +1,88 @@
+import { AssessmentQuestion } from '../models/assessment.model';
+
+export const INITIAL_ASSESSMENT_QUESTIONS: AssessmentQuestion[] = [
+  {
+    id: 'q-budget-01',
+    category: 'budgeting_basics',
+    difficulty: 'beginner',
+    question: 'Under the standard 50/30/20 budgeting rule, what category should receive 50% of your net income?',
+    options: [
+      { id: 'opt-a', text: 'Wants & luxury shopping' },
+      { id: 'opt-b', text: 'Essential needs (rent, groceries, basic utilities)' },
+      { id: 'opt-c', text: 'Volatile stock investments' },
+      { id: 'opt-d', text: 'Entertainment and vacations' },
+    ],
+    correctOptionId: 'opt-b',
+    explanation: 'The 50/30/20 rule recommends allocating 50% to essential Needs, 30% to Wants, and 20% to Savings/Debt reduction.',
+  },
+  {
+    id: 'q-emergency-01',
+    category: 'emergency_savings',
+    difficulty: 'beginner',
+    question: 'How much money is generally recommended for a complete emergency fund?',
+    options: [
+      { id: 'opt-a', text: '1 week of pocket money' },
+      { id: 'opt-b', text: '3 to 6 months of essential living expenses' },
+      { id: 'opt-c', text: 'Exactly $100 regardless of income' },
+      { id: 'opt-d', text: 'All your income for 10 years locked in real estate' },
+    ],
+    correctOptionId: 'opt-b',
+    explanation: 'Financial advisors recommend keeping 3 to 6 months of essential living expenses liquid in a safe account for unexpected disruptions.',
+  },
+  {
+    id: 'q-invest-01',
+    category: 'investing_fundamentals',
+    difficulty: 'intermediate',
+    question: 'If you invest $1,000 at a 10% annual compound interest rate, how much money will you have at the end of 2 years (with annual compounding)?',
+    options: [
+      { id: 'opt-a', text: '$1,100' },
+      { id: 'opt-b', text: '$1,200' },
+      { id: 'opt-c', text: '$1,210' },
+      { id: 'opt-d', text: '$1,020' },
+    ],
+    correctOptionId: 'opt-c',
+    explanation: 'Year 1: $1,000 + 10% = $1,100. Year 2: $1,100 + 10% ($110) = $1,210. Compound interest earns returns on accumulated interest.',
+  },
+  {
+    id: 'q-debt-01',
+    category: 'debt_and_credit',
+    difficulty: 'intermediate',
+    question: 'Why is paying only the "minimum due" on high-interest credit cards dangerous?',
+    options: [
+      { id: 'opt-a', text: 'It damages the plastic physical card' },
+      { id: 'opt-b', text: 'Most of the payment goes toward interest, extending repayment and multiplying total costs' },
+      { id: 'opt-c', text: 'Banks will instantly freeze all your other accounts' },
+      { id: 'opt-d', text: 'There is no danger, it is the best strategy' },
+    ],
+    correctOptionId: 'opt-b',
+    explanation: 'Minimum payments primarily cover accrued interest and very little principal, trapping borrowers in multi-year debt cycles.',
+  },
+  {
+    id: 'q-scam-01',
+    category: 'fraud_and_scam_protection',
+    difficulty: 'beginner',
+    question: 'You receive an urgent SMS: "Your bank account has been locked. Click http://bank-update-24.cc to enter your password and OTP within 10 minutes." What should you do?',
+    options: [
+      { id: 'opt-a', text: 'Click the link immediately to prevent account closure' },
+      { id: 'opt-b', text: 'Reply to the SMS with your password' },
+      { id: 'opt-c', text: 'Do not click; verify directly with the bank via official channels' },
+      { id: 'opt-d', text: 'Forward the message to your friends' },
+    ],
+    correctOptionId: 'opt-c',
+    explanation: 'Banks never send urgent text links asking for credentials or OTPs. This is a classic phishing fraud technique.',
+  },
+  {
+    id: 'q-inflation-01',
+    category: 'budgeting_basics',
+    difficulty: 'intermediate',
+    question: 'If the annual inflation rate is 6%, what happens to cash kept in a physical safe earning 0% interest?',
+    options: [
+      { id: 'opt-a', text: 'The numerical count of notes increases' },
+      { id: 'opt-b', text: 'Its purchasing power decreases by roughly 6% each year' },
+      { id: 'opt-c', text: 'Its purchasing power doubles' },
+      { id: 'opt-d', text: 'Inflation does not affect physical currency' },
+    ],
+    correctOptionId: 'opt-b',
+    explanation: 'Inflation erodes purchasing power over time; uninvested cash buys fewer goods each subsequent year.',
+  },
+];
