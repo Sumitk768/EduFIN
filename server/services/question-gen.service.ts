@@ -34,12 +34,39 @@ ${request.customTopicFocus ? `Topic Focus: ${request.customTopicFocus}` : ''}`;
       fallback: () => this.getFallbackQuestions(request),
     });
 
-    return result.data.map((q) => ({
-      ...q,
-      id: q.id || `gen-q-${randomUUID().substring(0, 8)}`,
-      category: request.category,
-      difficulty: request.difficulty,
-    }));
+    const validatedQuestions: GeneratedQuestion[] = [];
+    const fallbackList = this.getFallbackQuestions(request);
+
+    for (const rawQ of result.data) {
+      // Domain-level validation:
+      const options = rawQ.options || [];
+      const optionIds = new Set(options.map((o) => o.id));
+      const hasValidOptions =
+        Array.isArray(options) &&
+        options.length >= 2 &&
+        options.every((o) => typeof o.text === 'string' && o.text.trim().length > 0);
+
+      const hasValidCorrectOption =
+        typeof rawQ.correctOptionId === 'string' && optionIds.has(rawQ.correctOptionId);
+
+      const hasValidText =
+        Boolean(rawQ.questionText && rawQ.questionText.trim().length > 0) &&
+        Boolean(rawQ.scenario && rawQ.scenario.trim().length > 0);
+
+      if (hasValidOptions && hasValidCorrectOption && hasValidText) {
+        validatedQuestions.push({
+          ...rawQ,
+          id: rawQ.id || `gen-q-${randomUUID().substring(0, 8)}`,
+          category: request.category,
+          difficulty: request.difficulty,
+        });
+      } else {
+        // Fallback replacement if domain invariants are breached
+        validatedQuestions.push(...fallbackList);
+      }
+    }
+
+    return validatedQuestions.length > 0 ? validatedQuestions : fallbackList;
   }
 
   async validateAnswer(request: ValidateGeneratedAnswerRequest) {

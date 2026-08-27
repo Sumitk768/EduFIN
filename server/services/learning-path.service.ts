@@ -10,6 +10,9 @@ import {
   LearningStep,
   GenerateLearningPathRequest,
 } from '../models/learning-path.model';
+import { IAIProvider } from '../ai/ai-provider.interface';
+import { getAIProvider } from '../ai/ai.factory';
+import { AI_MODELS } from '../ai/prompts';
 import { randomUUID } from 'crypto';
 import { logger } from '../utils/logger.util';
 
@@ -18,7 +21,8 @@ export class LearningPathService {
     private pathRepo: ILearningPathRepository = repositoryFactory.getLearningPathRepository(),
     private knowledgeRepo: IKnowledgeRepository = repositoryFactory.getKnowledgeRepository(),
     private gapService: GapDetectionService = gapDetectionService,
-    private userRepo: IUserRepository = repositoryFactory.getUserRepository()
+    private userRepo: IUserRepository = repositoryFactory.getUserRepository(),
+    private aiProvider: IAIProvider = getAIProvider()
   ) {}
 
   async generateOrGetLearningPath(req: GenerateLearningPathRequest): Promise<LearningPath> {
@@ -46,6 +50,7 @@ export class LearningPathService {
       const module = allModules.find((m) => m.category === cat);
       if (module) {
         for (const lesson of module.lessons) {
+          // Strictly ground steps in real verified curriculum modules and lessons
           steps.push({
             id: `step-${randomUUID().substring(0, 8)}`,
             stepNumber: stepNumber++,
@@ -81,6 +86,29 @@ export class LearningPathService {
     }
 
     const totalMinutes = steps.reduce((sum, s) => sum + s.estimatedMinutes, 0);
+    const fallbackRationale = `Designed around identified gaps in ${prioritizedCategories.join(', ')} with a commitment of ~${req.weeklyTimeCommitmentMinutes} mins/week.`;
+    let personalizedRationale = fallbackRationale;
+
+    // Enhance personalized rationale using AI provider
+    try {
+      const prompt = `You are a financial learning path advisor. Write a concise 2-sentence encouraging, personalized study rationale for a learner with literacy level "${user?.literacyLevel || 'beginner'}".
+Identified priority gap topics: ${prioritizedCategories.join(', ')}.
+Weekly commitment: ${req.weeklyTimeCommitmentMinutes} minutes.
+Focus category: ${req.focusCategory || 'Comprehensive foundational mastery'}.`;
+
+      const result = await this.aiProvider.generateText({
+        prompt,
+        model: AI_MODELS.FAST,
+        operationName: 'generateLearningPathRationale',
+        fallback: () => fallbackRationale,
+      });
+
+      if (result.text && result.text.trim().length > 0) {
+        personalizedRationale = result.text.trim();
+      }
+    } catch (err: any) {
+      logger.warn('AI Learning Path rationale generation failed, using fallback:', err.message);
+    }
 
     const learningPath: LearningPath = {
       id: randomUUID(),
@@ -94,7 +122,7 @@ export class LearningPathService {
       totalStepsCount: steps.length,
       progressPercentage: 0,
       steps,
-      personalizedRationale: `Designed around identified gaps in ${prioritizedCategories.join(', ')} with a commitment of ~${req.weeklyTimeCommitmentMinutes} mins/week.`,
+      personalizedRationale,
     };
 
     await this.pathRepo.saveLearningPath(learningPath);
